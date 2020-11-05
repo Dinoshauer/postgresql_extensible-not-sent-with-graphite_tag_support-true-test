@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:10
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: onomondo
+      POSTGRES_HOST_AUTH_METHOD: trust
+    networks:
+      metrics:
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:master
+    volumes:
+      - ./metrics/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./metrics/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - 3000:3000
+    networks:
+      - metrics
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    volumes:
+      - ./metrics/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - 8125:8125/udp
+    networks:
+      - metrics
+
+  # carbon-relay-ng:
+  #   container_name: carbon-relay-ng
+  #   image: raintank/carbon-relay-ng
+  #   volumes:
+  #     - ./metrics/carbon-relay-ng:/conf
+  #   networks:
+  #     - metrics
+
+  graphite:
+    container_name: graphite
+    image: graphiteapp/graphite-statsd
+    networks:
+      - metrics
+
+networks:
+  metrics:
